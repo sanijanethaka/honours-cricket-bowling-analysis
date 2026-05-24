@@ -1,0 +1,43 @@
+# Video files (copyrighted footage, too large for GitHub)
+*.mp4
+*.mov
+*.avi
+*.mkv
+
+# Large output media files
+Outputs/**/*.mp4
+Outputs/**/*.mov
+
+# Raw videos folder (broadcast footage)
+Data/Raw\ Videos/
+Data/Clips/
+
+# Python build artefacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Local sensitive notes (uncomment if you want learning journal private)
+# docs/learning_journal.md
+
