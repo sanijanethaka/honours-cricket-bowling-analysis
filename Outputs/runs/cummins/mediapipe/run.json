@@ -1,0 +1,22 @@
+{
+  "clip_id": "cummins",
+  "bowler": "Pat Cummins",
+  "style": "Right-arm fast",
+  "category": "fast",
+  "bowling_arm": "right",
+  "status": "included",
+  "backend": "mediapipe",
+  "width": 650,
+  "height": 1080,
+  "fps": 30.0,
+  "n_frames_reported": 120,
+  "aspect": 0.6019,
+  "n_frames": 45,
+  "n_frames_retained": 36,
+  "retention": 0.8,
+  "peak_extension_deg": 174.13557799723665,
+  "min_angle_deg": 64.13874955361194,
+  "angular_range_deg": 109.99682844362471,
+  "max_rate_deg_per_frame": 18.689299251659918,
+  "max_rate_deg_per_s": 560.6789775497975
+}

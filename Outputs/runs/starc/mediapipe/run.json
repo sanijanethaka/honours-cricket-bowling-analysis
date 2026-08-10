@@ -1,0 +1,22 @@
+{
+  "clip_id": "starc",
+  "bowler": "Mitchell Starc",
+  "style": "Left-arm fast (slow-motion)",
+  "category": "fast",
+  "bowling_arm": "left",
+  "status": "included",
+  "backend": "mediapipe",
+  "width": 1080,
+  "height": 1920,
+  "fps": 59.945457900744316,
+  "n_frames_reported": 1142,
+  "aspect": 0.5625,
+  "n_frames": 1038,
+  "n_frames_retained": 386,
+  "retention": 0.371868978805395,
+  "peak_extension_deg": 181.56983993657423,
+  "min_angle_deg": 65.19858626714465,
+  "angular_range_deg": 116.37125366942958,
+  "max_rate_deg_per_frame": 53.71997980701079,
+  "max_rate_deg_per_s": 3220.26878795
+}

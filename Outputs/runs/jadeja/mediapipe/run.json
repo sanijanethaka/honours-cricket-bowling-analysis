@@ -1,0 +1,22 @@
+{
+  "clip_id": "jadeja",
+  "bowler": "Ravindra Jadeja",
+  "style": "Left-arm orthodox spin",
+  "category": "spin",
+  "bowling_arm": "left",
+  "status": "included",
+  "backend": "mediapipe",
+  "width": 640,
+  "height": 360,
+  "fps": 29.933481152993348,
+  "n_frames_reported": 450,
+  "aspect": 1.7778,
+  "n_frames": 288,
+  "n_frames_retained": 207,
+  "retention": 0.71875,
+  "peak_extension_deg": 179.2635663563405,
+  "min_angle_deg": 4.290248018875481,
+  "angular_range_deg": 174.97331833746503,
+  "max_rate_deg_per_frame": 12.756640425778372,
+  "max_rate_deg_per_s": 381.85065576054996
+}

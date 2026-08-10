@@ -1,0 +1,22 @@
+{
+  "clip_id": "murali",
+  "bowler": "Muttiah Muralitharan",
+  "style": "Right-arm off-spin",
+  "category": "spin",
+  "bowling_arm": "right",
+  "status": "excluded",
+  "backend": "mediapipe",
+  "width": 1080,
+  "height": 1920,
+  "fps": 29.804198271300052,
+  "n_frames_reported": 88,
+  "aspect": 0.5625,
+  "n_frames": 77,
+  "n_frames_retained": 3,
+  "retention": 0.03896103896103896,
+  "peak_extension_deg": 33.835145226031415,
+  "min_angle_deg": 8.532901448072582,
+  "angular_range_deg": 25.302243777958832,
+  "max_rate_deg_per_frame": 25.302243777958832,
+  "max_rate_deg_per_s": 754.1130902670532
+}
