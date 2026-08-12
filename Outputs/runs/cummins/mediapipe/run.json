@@ -14,9 +14,9 @@
   "n_frames": 45,
   "n_frames_retained": 36,
   "retention": 0.8,
-  "peak_extension_deg": 174.13557799723665,
-  "min_angle_deg": 64.13874955361194,
-  "angular_range_deg": 109.99682844362471,
-  "max_rate_deg_per_frame": 18.689299251659918,
-  "max_rate_deg_per_s": 560.6789775497975
+  "peak_extension_deg": 177.22166614309754,
+  "min_angle_deg": 64.6389302461377,
+  "angular_range_deg": 112.58273589695983,
+  "max_rate_deg_per_frame": 19.816268332033204,
+  "max_rate_deg_per_s": 594.4880499609961
 }

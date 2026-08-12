@@ -12,11 +12,11 @@
   "n_frames_reported": 88,
   "aspect": 0.5625,
   "n_frames": 77,
-  "n_frames_retained": 49,
-  "retention": 0.6363636363636364,
-  "peak_extension_deg": 178.51720200421516,
-  "min_angle_deg": 18.413190035188542,
-  "angular_range_deg": 160.10401196902663,
-  "max_rate_deg_per_frame": 61.04383722070233,
-  "max_rate_deg_per_s": 1819.3626277667781
+  "n_frames_retained": 48,
+  "retention": 0.6233766233766234,
+  "peak_extension_deg": 176.10239779527245,
+  "min_angle_deg": 25.923754835411902,
+  "angular_range_deg": 150.17864295986055,
+  "max_rate_deg_per_frame": 60.77516182896147,
+  "max_rate_deg_per_s": 1811.3549731207145
 }
