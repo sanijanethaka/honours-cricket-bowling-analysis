@@ -44,3 +44,4 @@ env/
 *.pt
 Data/PennAction/
 Data/PennAction/
+_to_delete/
