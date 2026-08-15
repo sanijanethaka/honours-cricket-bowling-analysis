@@ -71,6 +71,30 @@ JOINT_ORDER = [
     "left_ankle", "right_ankle",
 ]
 
+#: Penn Action labels left/right from the VIEWER's side; MediaPipe and
+#: YOLO/COCO label them anatomically (the subject's own side). The two
+#: conventions are therefore mirrored, and pairing the arms by name compares
+#: opposite limbs on any clip where the subject faces the camera.
+#:
+#: Verified empirically with src/arm_convention_check.py over 12 sequences:
+#:     same-name pairing   30.5 deg mean absolute error
+#:     swapped pairing     12.6 deg
+#: The swap more than halves the error, so it is not a marginal call.
+#:
+#: Consequence for the write-up: an error figure produced without this flip is
+#: not a measurement of the estimator, it is a measurement of the mismatch.
+PENN_LABELS_ARE_MIRRORED = True
+
+
+def flip_arm(arm: str) -> str:
+    return "left" if arm == "right" else "right"
+
+
+def estimator_arm_for(penn_arm: str) -> str:
+    """Which anatomical arm to ask the estimator for, given a Penn label."""
+    return flip_arm(penn_arm) if PENN_LABELS_ARE_MIRRORED else penn_arm
+
+
 #: Classes whose kinematics resemble a bowling delivery: an overhead or
 #: near-overhead arm extension driven from the shoulder. baseball_pitch is the
 #: closest analogue to a cricket delivery in the whole dataset.
@@ -301,9 +325,12 @@ def estimator_angles(lab: dict, backend_name: str, arm: str) -> pd.DataFrame:
 
 
 def score(lab: dict, backend_name: str) -> tuple[dict, pd.DataFrame]:
-    arm = dominant_arm(lab)
-    truth = truth_angles(lab, arm)
-    est = estimator_angles(lab, backend_name, arm)
+    # penn_arm indexes the annotation; est_arm is the anatomical arm the
+    # estimator is asked for. They differ because the conventions are mirrored.
+    penn_arm = dominant_arm(lab)
+    est_arm = estimator_arm_for(penn_arm)
+    truth = truth_angles(lab, penn_arm)
+    est = estimator_angles(lab, backend_name, est_arm)
 
     j = truth.merge(est[["frame", "elbow_angle_filtered", "elbow_angle_raw"]],
                     on="frame", how="inner")
@@ -317,7 +344,8 @@ def score(lab: dict, backend_name: str) -> tuple[dict, pd.DataFrame]:
         "sequence_id": lab["sequence_id"],
         "action": lab["action"],
         "viewpoint": lab["pose"],
-        "arm_analysed": arm,
+        "penn_arm": penn_arm,
+        "estimator_arm": est_arm,
         "train": lab["train"],
         "backend": backend_name,
         "n_frames": len(j),
