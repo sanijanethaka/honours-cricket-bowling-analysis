@@ -147,11 +147,23 @@ def check_mapping(sample: list[dict]) -> bool:
     """
     Validate JOINT_ORDER against body geometry instead of trusting it.
 
-    In image coordinates y increases downward, so across a large sample of
-    upright athletes the mean y should satisfy shoulder < elbow < wrist and
-    shoulder < hip < knee < ankle. If the ordering is wrong, these break --
-    which is a far better failure than silently reporting the error of an
-    elbow angle computed from a knee.
+    Two families of test:
+
+    1. Vertical ordering. In image coordinates y increases downward, so across a
+       large sample of upright athletes the mean y should satisfy head <
+       shoulder < hip < knee < ankle. These are robust for any action.
+
+    2. Limb rigidity. The upper arm and forearm are rigid segments, so their
+       pixel length should be roughly stable across the frames of a sequence
+       (modulo foreshortening). If the elbow and wrist columns were swapped, or
+       an index were off by one, the "segments" would join unrelated body parts
+       and their lengths would fluctuate wildly. This is the real diagnostic.
+
+    Note on the arm: 'elbow above wrist' is NOT a valid check for this dataset.
+    Every class here is an overhead or swing action -- tennis serve, baseball
+    pitch -- where the wrist sits above the elbow for much of the sequence.
+    Averaged over frames the two are level, so the test fails on correct data.
+    It is reported below as information only.
     """
     if not sample:
         print("no sequences to check")
@@ -161,40 +173,81 @@ def check_mapping(sample: list[dict]) -> bool:
     for name in JOINT_ORDER:
         i = joint_index(name)
         vals = []
-        for s in sample:
-            vis = s["visibility"][:, i]
+        for s_ in sample:
+            vis = s_["visibility"][:, i]
             if vis.any():
-                vals.append(s["y"][vis, i].mean())
+                vals.append(s_["y"][vis, i].mean())
         means[name] = float(np.mean(vals)) if vals else np.nan
 
     print("\nmean y (pixels, larger = lower in frame):")
     for name in JOINT_ORDER:
         print(f"  {name:<16} {means[name]:8.1f}")
 
+    # --- limb rigidity -----------------------------------------------------
+    def segment_stability(a: str, b: str) -> tuple[float, float]:
+        """Median relative spread of |a-b| within a sequence, and median length."""
+        spreads, lengths = [], []
+        ia, ib = joint_index(a), joint_index(b)
+        for s_ in sample:
+            vis = s_["visibility"][:, ia] & s_["visibility"][:, ib]
+            if vis.sum() < 5:
+                continue
+            d = np.hypot(s_["x"][vis, ia] - s_["x"][vis, ib],
+                         s_["y"][vis, ia] - s_["y"][vis, ib])
+            med = float(np.median(d))
+            if med <= 1:
+                continue
+            iqr = float(np.percentile(d, 75) - np.percentile(d, 25))
+            spreads.append(iqr / med)
+            lengths.append(med)
+        if not spreads:
+            return np.nan, np.nan
+        return float(np.median(spreads)), float(np.median(lengths))
+
+    print("\nlimb rigidity (relative IQR of segment length; lower = more rigid):")
+    seg = {}
+    for a, b in (("right_shoulder", "right_elbow"), ("right_elbow", "right_wrist"),
+                 ("left_shoulder", "left_elbow"), ("left_elbow", "left_wrist"),
+                 ("right_hip", "right_knee"), ("right_knee", "right_ankle")):
+        spread, length = segment_stability(a, b)
+        seg[(a, b)] = (spread, length)
+        print(f"  {a:>15} -> {b:<15} relIQR {spread:5.2f}   median length {length:6.1f} px")
+
+    upper = seg[("right_shoulder", "right_elbow")][1]
+    fore = seg[("right_elbow", "right_wrist")][1]
+    ratio = fore / upper if upper else np.nan
+
     checks = [
+        ("head above shoulders", means["head"] < means["left_shoulder"]),
         ("shoulder above elbow", means["left_shoulder"] < means["left_elbow"]
                                  and means["right_shoulder"] < means["right_elbow"]),
-        ("elbow above wrist", means["left_elbow"] < means["left_wrist"]
-                              and means["right_elbow"] < means["right_wrist"]),
         ("shoulder above hip", means["left_shoulder"] < means["left_hip"]),
         ("hip above knee", means["left_hip"] < means["left_knee"]),
         ("knee above ankle", means["left_knee"] < means["left_ankle"]),
-        ("head above shoulders", means["head"] < means["left_shoulder"]),
+        ("upper arm is a rigid segment",
+         seg[("right_shoulder", "right_elbow")][0] < 0.45),
+        ("forearm is a rigid segment",
+         seg[("right_elbow", "right_wrist")][0] < 0.45),
+        ("forearm length comparable to upper arm", 0.5 < ratio < 1.8),
     ]
     print()
     ok = True
     for label, passed in checks:
         print(f"  [{'PASS' if passed else 'FAIL'}] {label}")
         ok = ok and passed
+
+    # Informational only -- fails on correct data for overhead actions.
+    arm_note = (means["left_elbow"] < means["left_wrist"]
+                and means["right_elbow"] < means["right_wrist"])
+    print(f"  [info] wrist below elbow on average: {arm_note} "
+          "(expected False for overhead/swing classes)")
+
     if not ok:
         print(
             "\nJOINT_ORDER in src/penn_action.py does not match this copy of the\n"
             "dataset. Fix the constant before running the validation -- every\n"
             "number downstream depends on it."
         )
-    # Overhead classes are the exception to 'elbow above wrist' at the moment of
-    # release, so a marginal failure on arm checks is worth eyeballing rather
-    # than trusting blindly.
     return ok
 
 
