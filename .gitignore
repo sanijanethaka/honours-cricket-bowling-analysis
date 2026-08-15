@@ -41,3 +41,6 @@ env/
 # Local sensitive notes (uncomment if you want learning journal private)
 # docs/learning_journal.md
 
+*.pt
+Data/PennAction/
+Data/PennAction/

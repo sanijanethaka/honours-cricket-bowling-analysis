@@ -70,6 +70,17 @@ class PoseBackend:
     def run(self, video_path: str, arm: str) -> Iterator[FrameKeypoints]:
         raise NotImplementedError
 
+    def run_images(self, image_paths, arm: str) -> Iterator[FrameKeypoints]:
+        """
+        Same contract as run(), over an ordered list of image files.
+
+        Needed for frame-sequence datasets such as Penn Action, which ship
+        JPEG frames rather than video. Keeping this on the interface means the
+        ground-truth validation exercises the identical code path as the cricket
+        clips -- only the frame source differs.
+        """
+        raise NotImplementedError
+
     def close(self) -> None:
         pass
 
@@ -109,6 +120,38 @@ class MediaPipeBackend(PoseBackend):
         if arm == "right":
             return lm.RIGHT_SHOULDER, lm.RIGHT_ELBOW, lm.RIGHT_WRIST
         raise ValueError(f"bowling_arm must be 'left' or 'right', got {arm!r}")
+
+    def _one(self, frame, idx: int, scale, lms) -> FrameKeypoints:
+        import cv2
+
+        s_lm, e_lm, w_lm = lms
+        res = self._pose.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+        if not res.pose_landmarks:
+            return FrameKeypoints.empty(idx)
+        L = res.pose_landmarks.landmark
+        s, e, w = L[s_lm], L[e_lm], L[w_lm]
+        return FrameKeypoints(
+            frame=idx,
+            shoulder=np.array([s.x, s.y]) * scale,
+            elbow=np.array([e.x, e.y]) * scale,
+            wrist=np.array([w.x, w.y]) * scale,
+            shoulder_conf=float(s.visibility),
+            elbow_conf=float(e.visibility),
+            wrist_conf=float(w.visibility),
+            detected=True,
+        )
+
+    def run_images(self, image_paths, arm: str) -> Iterator[FrameKeypoints]:
+        import cv2
+
+        lms = self._landmarks_for(arm)
+        for idx, path in enumerate(image_paths):
+            frame = cv2.imread(str(path))
+            if frame is None:
+                yield FrameKeypoints.empty(idx)
+                continue
+            h, w = frame.shape[:2]
+            yield self._one(frame, idx, np.array([w, h]), lms)
 
     def run(self, video_path: str, arm: str) -> Iterator[FrameKeypoints]:
         import cv2
@@ -202,6 +245,36 @@ class YoloPoseBackend(PoseBackend):
             for b in result.boxes.xyxy.cpu().numpy()
         ]
         return int(np.argmax(areas))
+
+    def _one(self, frame, idx: int, arm: str) -> FrameKeypoints:
+        s_i, e_i, w_i = self._IDX[arm]
+        res = self._model.predict(frame, imgsz=self._imgsz, verbose=False, device="cpu")[0]
+        person = self._select_subject(res)
+        kp = res.keypoints
+        if person is None or kp is None or kp.xy is None or len(kp.xy) == 0:
+            return FrameKeypoints.empty(idx)
+        xy = kp.xy[person].cpu().numpy()
+        conf = kp.conf[person].cpu().numpy() if kp.conf is not None else np.ones(len(xy))
+        return FrameKeypoints(
+            frame=idx,
+            shoulder=xy[s_i], elbow=xy[e_i], wrist=xy[w_i],
+            shoulder_conf=float(conf[s_i]),
+            elbow_conf=float(conf[e_i]),
+            wrist_conf=float(conf[w_i]),
+            detected=True,
+        )
+
+    def run_images(self, image_paths, arm: str) -> Iterator[FrameKeypoints]:
+        import cv2
+
+        if arm not in self._IDX:
+            raise ValueError(f"arm must be 'left' or 'right', got {arm!r}")
+        for idx, path in enumerate(image_paths):
+            frame = cv2.imread(str(path))
+            if frame is None:
+                yield FrameKeypoints.empty(idx)
+                continue
+            yield self._one(frame, idx, arm)
 
     def run(self, video_path: str, arm: str) -> Iterator[FrameKeypoints]:
         import cv2
