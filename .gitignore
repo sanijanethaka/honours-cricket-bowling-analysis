@@ -45,3 +45,24 @@ env/
 Data/PennAction/
 Data/PennAction/
 _to_delete/
+
+# Working / personal material — not part of the software artefact
+Claude outputs/
+PLAN_HD.md
+QA_PREP.md
+SCRIPT.md
+STUDY_GUIDE.md
+WEEK4_START.md
+*.docx
+*.pdf
+*.pptx
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.DS_Store
+
+# Copyrighted broadcast footage / large files
+*.mp4
+*.mov

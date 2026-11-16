@@ -67,10 +67,18 @@ def test_shoulder_side(seqs) -> None:
     if np.isnan(front) or np.isnan(back):
         print("  inconclusive: need both 'front' and 'back' sequences")
         return
-    if front * back < 0:
-        print(f"  front {front:+.1f} vs back {back:+.1f} -- SIGN FLIPS")
+    # Anatomical labels predict front > 0 (own-left on image right) and back < 0.
+    # A sign flip alone is not decisive: its DIRECTION fixes the convention.
+    if front > 0 and back < 0:
+        print(f"  front {front:+.1f} vs back {back:+.1f} -- SIGN FLIPS (front +, back -)")
         print("  => labels are ANATOMICAL, same convention as MediaPipe/YOLO.")
         print("     No change needed; the large errors have another cause.")
+    elif front < 0 and back > 0:
+        print(f"  front {front:+.1f} vs back {back:+.1f} -- SIGN FLIPS, INVERSE direction")
+        print("  => labels are ANATOMICAL BUT MIRRORED relative to MediaPipe/YOLO.")
+        print("     The exact inverse of the anatomical prediction is the signature")
+        print("     of mirrored labels; src/penn_action.py must flip one side")
+        print("     (PENN_LABELS_ARE_MIRRORED = True). Consistent with Test 2.")
     else:
         print(f"  front {front:+.1f} vs back {back:+.1f} -- NO SIGN FLIP")
         print("  => labels are IMAGE-BASED (viewer's left/right).")
